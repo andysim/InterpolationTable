@@ -33,16 +33,16 @@ void
 ERFCInterpolator::init()
 {
     // This can be hardwired to some reasonable value.  This choice yields a
-    // maximum error of 
+    // maximum error of 5.93E-08
     tabledim_ = 800;
     // erfc(6) = 2.15E-17, so we're done after this.
     max_ = 6.0;
-    table_ = new double[tabledim_ + 1]; // Don't forget to add 1, because we loop from 0 <= x <= npts
+    table_ = new double[tabledim_ + 2]; // Don't forget to add 2, because we loop from -1 <= x <= npts
     spacing_ = max_ / (double)tabledim_;
     maxinterp_ = max_ - spacing_;
     invspace_ = 1.0/spacing_;
-    for(int i = 0; i <= tabledim_; ++i)
-        table_[i] = erfc((double)i*spacing_);
+    for(int i = -1; i <= tabledim_; ++i)
+        table_[i+1] = erfc((double)i*spacing_);
 }
 
 
@@ -66,13 +66,10 @@ ERFCInterpolator::compute(const double kR) const
         return 0.0;
     double x = kR*invspace_;
     int intx = int(x+0.5);
-    // Make sure we have some wiggle room to get three points to sample
-    if(intx == 0)
-        ++intx;
     double remainder = x - (double)intx;
     // Read three contiguous values.  Write it using incremented pointers, to help the
     // compiler identify contiguous memory access.
-    double *ptr = &table_[intx-1];
+    double *ptr = &table_[intx];
     double valm = *ptr; ++ptr;
     double val0 = *ptr; ++ptr;
     double valp = *ptr;
